@@ -3,8 +3,10 @@ package com.quanxiaoha.xiaohashu.agent.controller;
 import com.quanxiaoha.framework.common.response.Response;
 import com.quanxiaoha.xiaohashu.agent.model.req.AgentRewriteReq;
 import com.quanxiaoha.xiaohashu.agent.model.req.AgentTagReq;
+import com.quanxiaoha.xiaohashu.agent.model.req.AgentTaskReq;
 import com.quanxiaoha.xiaohashu.agent.model.req.AgentTitleReq;
 import com.quanxiaoha.xiaohashu.agent.service.AgentService;
+import com.quanxiaoha.xiaohashu.agent.service.impl.AgentServiceImpl;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,8 @@ public class AgentController {
 
     @Resource
     private AgentService agentService;
+    @Resource
+    private AgentServiceImpl agentServiceImpl;
 
     @PostMapping("/title")
     public Response<?> generateTitles(@Valid @RequestBody AgentTitleReq req) {
@@ -32,5 +36,11 @@ public class AgentController {
     @PostMapping("/tags")
     public Response<?> recommendTags(@Valid @RequestBody AgentTagReq req) {
         return Response.success(agentService.recommendTags(req.getContent()));
+    }
+
+    @PostMapping("/run")
+    public Response<?> run(@Valid @RequestBody AgentTaskReq req) {
+        var result = agentServiceImpl.runAgent(req.getContent(), req.getSessionId(), req.getPreferences());
+        return Response.success(result);
     }
 }

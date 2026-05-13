@@ -1,15 +1,24 @@
 package com.quanxiaoha.xiaohashu.agent.service.impl;
 
+import com.quanxiaoha.xiaohashu.agent.service.AgentContextService;
+import com.quanxiaoha.xiaohashu.agent.service.AgentMemoryService;
 import com.quanxiaoha.xiaohashu.agent.service.AgentService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class AgentServiceImpl implements AgentService {
+
+    @Resource
+    private AgentContextService agentContextService;
+    @Resource
+    private AgentMemoryService agentMemoryService;
 
     @Override
     public List<String> generateTitles(String content) {
@@ -57,4 +66,16 @@ public class AgentServiceImpl implements AgentService {
         tags.add("创作灵感");
         return new ArrayList<>(tags);
     }
+
+    public AgentResult runAgent(String content, String sessionId, String preferences) {
+        String realSessionId = (sessionId == null || sessionId.isBlank()) ? UUID.randomUUID().toString() : sessionId;
+        List<String> hints = agentContextService.buildContextHints(content, preferences);
+        List<String> titles = generateTitles(content);
+        String rewrite = rewriteContent(content);
+        List<String> tags = recommendTags(content);
+        agentMemoryService.remember(realSessionId, content, titles, rewrite, tags, hints);
+        return new AgentResult(realSessionId, titles, rewrite, tags, hints, agentMemoryService.summarize(realSessionId));
+    }
+
+    public record AgentResult(String sessionId, List<String> titles, String rewrite, List<String> tags, List<String> contextHints, String memorySummary) {}
 }

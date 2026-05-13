@@ -131,9 +131,17 @@
       <section v-else-if="activeTab === 'agent'" class="card auth-panel">
         <div class="panel-head">
           <h3>AI 创作助手</h3>
-          <p>这个页面用于测试 LangGraph / Agent 能力。</p>
+          <p>支持上下文、记忆和一键 Agent 流程。</p>
         </div>
         <form class="form" @submit.prevent="runAgentAll">
+          <label>
+            会话 ID
+            <input v-model="agentSessionId" placeholder="不填则自动生成" />
+          </label>
+          <label>
+            用户偏好
+            <input v-model="agentPreferences" placeholder="例如：种草风, 干货风" />
+          </label>
           <label>
             输入内容
             <textarea v-model="agentInput" rows="6" placeholder="输入一段你想润色的笔记正文"></textarea>
@@ -155,6 +163,16 @@
           <div class="chips">
             <span v-for="tag in agentOutput.tags" :key="tag" class="chip">#{{ tag }}</span>
           </div>
+        </div>
+        <div v-if="agentOutput.contextHints.length" class="ai-box">
+          <h4>上下文提示</h4>
+          <ul>
+            <li v-for="hint in agentOutput.contextHints" :key="hint">{{ hint }}</li>
+          </ul>
+        </div>
+        <div v-if="agentOutput.memorySummary" class="ai-box">
+          <h4>记忆摘要</h4>
+          <p>{{ agentOutput.memorySummary }}</p>
         </div>
       </section>
 
@@ -207,7 +225,9 @@ const registerForm = ref({ nickname: '', phone: '', password: '' })
 const publishForm = ref({ title: '', content: '' })
 const aiResult = ref({ titles: [], rewrite: '', tags: [] })
 const agentInput = ref('')
-const agentOutput = ref({ titles: [], rewrite: '', tags: [] })
+const agentSessionId = ref('')
+const agentPreferences = ref('')
+const agentOutput = ref({ titles: [], rewrite: '', tags: [], contextHints: [], memorySummary: '' })
 
 const api = axios.create({ baseURL: '/api', timeout: 10000 })
 const agentApi = axios.create({ baseURL: 'http://localhost:8090', timeout: 10000 })
@@ -292,15 +312,19 @@ const aiTags = async () => {
 const runAgentAll = async () => {
   try {
     const content = agentInput.value
-    const [titles, rewrite, tags] = await Promise.all([
-      agentApi.post('/agent/title', { content }),
-      agentApi.post('/agent/rewrite', { content }),
-      agentApi.post('/agent/tags', { content }),
-    ])
+    const { data } = await agentApi.post('/agent/run', {
+      content,
+      sessionId: agentSessionId.value,
+      preferences: agentPreferences.value,
+    })
+    const result = data?.data || {}
+    agentSessionId.value = result.sessionId || agentSessionId.value
     agentOutput.value = {
-      titles: titles.data?.data || [],
-      rewrite: rewrite.data?.data || '',
-      tags: tags.data?.data || [],
+      titles: result.titles || [],
+      rewrite: result.rewrite || '',
+      tags: result.tags || [],
+      contextHints: result.contextHints || [],
+      memorySummary: result.memorySummary || '',
     }
     flash('Agent 一键生成完成')
   } catch (e) {

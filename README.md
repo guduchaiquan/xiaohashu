@@ -1,6 +1,6 @@
 # 小哈书
 
-小哈书是一个基于 Spring Cloud Alibaba 的仿小红书风格微服务项目，包含认证、用户、笔记、对象存储、KV 存储、分布式 ID 生成和网关等模块。
+小哈书是一个基于 Spring Cloud Alibaba 的仿小红书风格微服务项目，包含认证、用户、笔记、对象存储、KV 存储、分布式 ID 生成、网关和 AI 创作助手等模块。
 
 ## 当前模块
 
@@ -13,7 +13,16 @@
 - `xiaohashu-gateway`：统一网关与鉴权
 - `xiaoha-framework`：公共基础组件
 - `xiaohashu-web`：Vue 3 前端测试页面
-- `xiaohashu-agent`：AI 创作助手服务（标题生成/正文润色/标签推荐）
+- `xiaohashu-agent`：AI 创作助手服务（标题生成/正文润色/标签推荐/上下文记忆）
+
+## Agent 设计说明
+
+当前 `xiaohashu-agent` 采用“工业化可演示”思路，重点是：
+
+- 上下文机制：通过 `sessionId` 隔离会话
+- 记忆机制：保存最近一次创作结果和上下文提示
+- 幻觉抑制：先做内容提示、偏好提示、标签提示，再输出结果
+- 可扩展：后续可以直接替换成 LangGraph / LLM / RAG 实现
 
 ## 后端接口测试顺序
 
@@ -90,6 +99,25 @@
 }
 ```
 
+### 7. Agent 一键生成
+
+`POST http://localhost:8090/agent/run`
+
+```json
+{
+  "content": "今天分享一套通勤穿搭，适合上班和约会。",
+  "sessionId": "demo-session-001",
+  "preferences": "种草风, 干货风"
+}
+```
+
+返回内容包含：
+- `titles`
+- `rewrite`
+- `tags`
+- `contextHints`
+- `memorySummary`
+
 ## Postman 测试建议
 
 ### 通用配置
@@ -115,6 +143,7 @@ Authorization: Bearer {{token}}
 4. 调用验证码登录接口
 5. 调用密码登录接口
 6. 调用发布笔记接口
+7. 调用 Agent 一键生成接口
 
 ## 前端运行
 
@@ -137,6 +166,7 @@ Agent 服务默认端口为 `8090`，提供如下接口：
 - `POST /agent/title`：生成标题
 - `POST /agent/rewrite`：正文润色
 - `POST /agent/tags`：标签推荐
+- `POST /agent/run`：一键生成（标题 + 润色 + 标签 + 上下文 + 记忆）
 
 ## 后端说明
 
