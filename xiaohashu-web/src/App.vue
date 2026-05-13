@@ -103,8 +103,59 @@
             正文
             <textarea v-model="publishForm.content" rows="6" placeholder="写点什么吧"></textarea>
           </label>
+          <div class="action-row">
+            <button type="button" class="ghost-btn" @click="aiGenerateTitles">AI 标题</button>
+            <button type="button" class="ghost-btn" @click="aiRewrite">AI 润色</button>
+            <button type="button" class="ghost-btn" @click="aiTags">AI 标签</button>
+          </div>
+          <div v-if="aiResult.titles.length" class="ai-box">
+            <h4>标题建议</h4>
+            <div class="chips">
+              <span v-for="title in aiResult.titles" :key="title" class="chip" @click="publishForm.title = title">{{ title }}</span>
+            </div>
+          </div>
+          <div v-if="aiResult.rewrite" class="ai-box">
+            <h4>润色结果</h4>
+            <p>{{ aiResult.rewrite }}</p>
+          </div>
+          <div v-if="aiResult.tags.length" class="ai-box">
+            <h4>推荐标签</h4>
+            <div class="chips">
+              <span v-for="tag in aiResult.tags" :key="tag" class="chip">#{{ tag }}</span>
+            </div>
+          </div>
           <button type="submit">发布</button>
         </form>
+      </section>
+
+      <section v-else-if="activeTab === 'agent'" class="card auth-panel">
+        <div class="panel-head">
+          <h3>AI 创作助手</h3>
+          <p>这个页面用于测试 LangGraph / Agent 能力。</p>
+        </div>
+        <form class="form" @submit.prevent="runAgentAll">
+          <label>
+            输入内容
+            <textarea v-model="agentInput" rows="6" placeholder="输入一段你想润色的笔记正文"></textarea>
+          </label>
+          <button type="submit">一键生成</button>
+        </form>
+        <div v-if="agentOutput.titles.length" class="ai-box">
+          <h4>生成标题</h4>
+          <div class="chips">
+            <span v-for="title in agentOutput.titles" :key="title" class="chip" @click="publishForm.title = title">{{ title }}</span>
+          </div>
+        </div>
+        <div v-if="agentOutput.rewrite" class="ai-box">
+          <h4>润色结果</h4>
+          <p>{{ agentOutput.rewrite }}</p>
+        </div>
+        <div v-if="agentOutput.tags.length" class="ai-box">
+          <h4>推荐标签</h4>
+          <div class="chips">
+            <span v-for="tag in agentOutput.tags" :key="tag" class="chip">#{{ tag }}</span>
+          </div>
+        </div>
       </section>
 
       <section v-else class="card auth-panel">
@@ -141,6 +192,7 @@ const tabs = [
   { key: 'login', label: '登录' },
   { key: 'register', label: '注册' },
   { key: 'publish', label: '发布' },
+  { key: 'agent', label: 'AI 助手' },
   { key: 'profile', label: '我的' },
 ]
 
@@ -153,8 +205,12 @@ const cards = [
 const loginForm = ref({ phone: '', type: 1, code: '', password: '' })
 const registerForm = ref({ nickname: '', phone: '', password: '' })
 const publishForm = ref({ title: '', content: '' })
+const aiResult = ref({ titles: [], rewrite: '', tags: [] })
+const agentInput = ref('')
+const agentOutput = ref({ titles: [], rewrite: '', tags: [] })
 
 const api = axios.create({ baseURL: '/api', timeout: 10000 })
+const agentApi = axios.create({ baseURL: 'http://localhost:8090', timeout: 10000 })
 
 const flash = (text) => {
   message.value = text
@@ -200,6 +256,55 @@ const handlePublish = async () => {
     flash(data?.success ? '发布成功' : (data?.errorMessage || '发布失败'))
   } catch (e) {
     flash(e?.response?.data?.errorMessage || e.message || '发布请求失败')
+  }
+}
+
+const aiGenerateTitles = async () => {
+  try {
+    const { data } = await agentApi.post('/agent/title', { content: publishForm.value.content || agentInput.value })
+    aiResult.value.titles = data?.data || []
+    flash('标题已生成')
+  } catch (e) {
+    flash(e?.response?.data?.errorMessage || e.message || 'AI 标题生成失败')
+  }
+}
+
+const aiRewrite = async () => {
+  try {
+    const { data } = await agentApi.post('/agent/rewrite', { content: publishForm.value.content || agentInput.value })
+    aiResult.value.rewrite = data?.data || ''
+    flash('正文已润色')
+  } catch (e) {
+    flash(e?.response?.data?.errorMessage || e.message || 'AI 润色失败')
+  }
+}
+
+const aiTags = async () => {
+  try {
+    const { data } = await agentApi.post('/agent/tags', { content: publishForm.value.content || agentInput.value })
+    aiResult.value.tags = data?.data || []
+    flash('标签已推荐')
+  } catch (e) {
+    flash(e?.response?.data?.errorMessage || e.message || 'AI 标签推荐失败')
+  }
+}
+
+const runAgentAll = async () => {
+  try {
+    const content = agentInput.value
+    const [titles, rewrite, tags] = await Promise.all([
+      agentApi.post('/agent/title', { content }),
+      agentApi.post('/agent/rewrite', { content }),
+      agentApi.post('/agent/tags', { content }),
+    ])
+    agentOutput.value = {
+      titles: titles.data?.data || [],
+      rewrite: rewrite.data?.data || '',
+      tags: tags.data?.data || [],
+    }
+    flash('Agent 一键生成完成')
+  } catch (e) {
+    flash(e?.response?.data?.errorMessage || e.message || 'Agent 执行失败')
   }
 }
 

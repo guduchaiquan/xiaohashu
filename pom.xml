@@ -34,6 +34,7 @@
         <module>xiaohashu-kv/xiaohashu-kv-biz</module>
         <module>xiaohashu-distribute-id-generator</module>
         <module>xiaohashu-note</module>
+        <module>xiaohashu-agent</module>
     </modules>
 
     <properties>
