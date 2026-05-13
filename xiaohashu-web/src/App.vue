@@ -125,6 +125,9 @@
         </form>
         <div v-if="agentOutput.contextHints.length" class="result-box">
           <h4>上下文提示</h4>
+          <div class="workflow-bar">
+            <span v-for="step in workflowSteps" :key="step.key" :class="['workflow-step', { active: agentOutput.stage === step.key }]">{{ step.label }}</span>
+          </div>
           <ul>
             <li v-for="hint in agentOutput.contextHints" :key="hint">{{ hint }}</li>
           </ul>
