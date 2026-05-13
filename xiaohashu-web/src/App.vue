@@ -18,7 +18,7 @@
       <div class="quick-card">
         <span class="quick-tag">Star-Friendly Demo</span>
         <h3>一键体验</h3>
-        <p>登录、注册、发笔记、AI 创作助手都可以直接演示。</p>
+        <p>登录、注册、发笔记、AI 创作、详情、点赞、收藏、评论、搜索都可以直接演示。</p>
       </div>
     </aside>
 
@@ -36,7 +36,7 @@
       </header>
 
       <section v-if="activeTab === 'feed'" class="feed-grid">
-        <article v-for="card in cards" :key="card.title" class="feed-card">
+        <article v-for="card in cards" :key="card.title" class="feed-card" @click="openDetail(card.id)">
           <div class="feed-cover" :style="{ background: card.bg }"></div>
           <div class="feed-body">
             <div class="feed-meta">
@@ -47,6 +47,25 @@
             <p>{{ card.desc }}</p>
           </div>
         </article>
+      </section>
+
+      <section v-else-if="activeTab === 'detail'" class="panel">
+        <h3>{{ detail.title }}</h3>
+        <p>作者：{{ detail.creatorNickname }} · {{ detail.createTime }}</p>
+        <p>点赞：{{ detail.likeCount }} · 收藏：{{ detail.favoriteCount }} · 评论：{{ detail.commentCount }}</p>
+        <p>{{ detail.content }}</p>
+        <div class="chips">
+          <button class="ghost-btn" @click="likeNote">点赞</button>
+          <button class="ghost-btn" @click="favoriteNote">收藏</button>
+          <button class="ghost-btn" @click="loadComments">评论列表</button>
+        </div>
+        <div class="result-box" v-if="comments.length">
+          <h4>评论</h4>
+          <div v-for="c in comments" :key="c.id" class="comment-item">
+            <strong>{{ c.userNickname }}</strong>
+            <p>{{ c.content }}</p>
+          </div>
+        </div>
       </section>
 
       <section v-else-if="activeTab === 'login'" class="panel">
@@ -125,9 +144,6 @@
         </form>
         <div v-if="agentOutput.contextHints.length" class="result-box">
           <h4>上下文提示</h4>
-          <div class="workflow-bar">
-            <span v-for="step in workflowSteps" :key="step.key" :class="['workflow-step', { active: agentOutput.stage === step.key }]">{{ step.label }}</span>
-          </div>
           <ul>
             <li v-for="hint in agentOutput.contextHints" :key="hint">{{ hint }}</li>
           </ul>
@@ -151,6 +167,25 @@
         <div v-if="agentOutput.memorySummary" class="result-box">
           <h4>记忆摘要</h4>
           <p>{{ agentOutput.memorySummary }}</p>
+        </div>
+      </section>
+
+      <section v-else-if="activeTab === 'search'" class="panel">
+        <h3>搜索</h3>
+        <p>搜用户 / 搜笔记 / 搜标签，形成内容社区检索闭环。</p>
+        <form class="form" @submit.prevent="runSearch">
+          <input v-model="searchKeyword" placeholder="输入关键词" />
+          <select v-model="searchType">
+            <option value="user">用户</option>
+            <option value="note">笔记</option>
+            <option value="tag">标签</option>
+          </select>
+          <button type="submit" class="primary-btn">搜索</button>
+        </form>
+        <div v-if="searchResult.length" class="result-box">
+          <div v-for="item in searchResult" :key="item.id || item" class="search-item">
+            <pre>{{ item }}</pre>
+          </div>
         </div>
       </section>
 
@@ -179,6 +214,11 @@ const activeTab = ref('feed')
 const message = ref('')
 const token = ref(localStorage.getItem('xhs_token') || '')
 const profile = ref(JSON.parse(localStorage.getItem('xhs_profile') || '{}'))
+const detail = ref({ title: '', creatorNickname: '', createTime: '', likeCount: 0, favoriteCount: 0, commentCount: 0, content: '' })
+const comments = ref([])
+const searchKeyword = ref('')
+const searchType = ref('user')
+const searchResult = ref([])
 
 const tabs = [
   { key: 'feed', label: '首页' },
@@ -186,13 +226,14 @@ const tabs = [
   { key: 'register', label: '注册' },
   { key: 'publish', label: '发布' },
   { key: 'agent', label: 'AI 助手' },
+  { key: 'search', label: '搜索' },
   { key: 'profile', label: '我的' },
 ]
 
 const cards = [
-  { title: '今日穿搭灵感', desc: '通勤、约会、周末出街都能用的配色思路。', author: '小哈同学', likes: '1.8w', bg: 'linear-gradient(135deg,#ff9a9e,#fad0c4)' },
-  { title: '周末探店清单', desc: '咖啡、甜品、拍照点位，一次收藏到位。', author: '城市玩家', likes: '9860', bg: 'linear-gradient(135deg,#a18cd1,#fbc2eb)' },
-  { title: '产品设计复盘', desc: '把一个功能拆成结构、流程、视觉三个层面。', author: '设计师阿乐', likes: '2.4w', bg: 'linear-gradient(135deg,#f6d365,#fda085)' },
+  { id: 1, title: '今日穿搭灵感', desc: '通勤、约会、周末出街都能用的配色思路。', author: '小哈同学', likes: '1.8w', bg: 'linear-gradient(135deg,#ff9a9e,#fad0c4)' },
+  { id: 2, title: '周末探店清单', desc: '咖啡、甜品、拍照点位，一次收藏到位。', author: '城市玩家', likes: '9860', bg: 'linear-gradient(135deg,#a18cd1,#fbc2eb)' },
+  { id: 3, title: '产品设计复盘', desc: '把一个功能拆成结构、流程、视觉三个层面。', author: '设计师阿乐', likes: '2.4w', bg: 'linear-gradient(135deg,#f6d365,#fda085)' },
 ]
 
 const loginForm = ref({ phone: '', type: 1, code: '', password: '' })
@@ -310,6 +351,26 @@ const runAgentAll = async () => {
   } catch (e) {
     flash(e?.response?.data?.errorMessage || e.message || 'Agent 执行失败')
   }
+}
+
+const openDetail = async (id) => {
+  activeTab.value = 'detail'
+  const { data } = await api.post('/note/detail', { id })
+  detail.value = data?.data || detail.value
+}
+
+const likeNote = async () => api.post('/note/like', { noteId: detail.value.id })
+const favoriteNote = async () => api.post('/note/favorite', { noteId: detail.value.id })
+const loadComments = async () => {
+  const { data } = await api.post('/note/comment/list', { noteId: detail.value.id })
+  comments.value = data?.data || []
+}
+
+const runSearch = async () => {
+  const urlMap = { user: '/note/search/user', note: '/note/search/note', tag: '/note/search/tag' }
+  const { data } = await api.post(urlMap[searchType.value], { keyword: searchKeyword.value })
+  searchResult.value = data?.data || []
+  flash('搜索完成')
 }
 
 const refreshProfile = () => {

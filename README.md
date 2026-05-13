@@ -115,6 +115,7 @@
 - 发布视频笔记
 - 笔记正文存储与恢复
 - 文件上传
+- 笔记详情、列表、点赞收藏、评论、搜索
 
 ### AI 创作助手
 - 生成标题
@@ -136,7 +137,7 @@
 - `sa-token` 负责 token 管理和登录态维护
 
 ### 2. 内容发布闭环
-- `note` 负责笔记发布、详情、列表等内容能力
+- `note` 负责笔记发布、详情、列表、点赞收藏、评论、搜索
 - `kv` 负责正文等长文本存储
 - `oss` 负责图片、头像、背景图等资源上传
 - `id-generator` 负责统一生成业务 ID
@@ -248,6 +249,22 @@
 - `contextHints`
 - `memorySummary`
 
+### 8）内容社区闭环接口
+
+- `POST /note/detail`
+- `POST /note/page`
+- `POST /note/my/page`
+- `POST /note/topic/page`
+- `POST /note/like`
+- `POST /note/unlike`
+- `POST /note/favorite`
+- `POST /note/unfavorite`
+- `POST /note/comment/add`
+- `POST /note/comment/list`
+- `POST /note/search/user`
+- `POST /note/search/note`
+- `POST /note/search/tag`
+
 ---
 
 ## 快速启动
@@ -334,6 +351,7 @@ Authorization: Bearer {{token}}
 - 使用分布式 ID 生成器支持主键统一生成
 - 设计 AI 创作助手模块，支持上下文、记忆和标签推荐
 - 实现 Vue 3 仿小红书前端演示页
+- 补全笔记详情、列表、点赞收藏、评论、搜索闭环
 
 ---
 
