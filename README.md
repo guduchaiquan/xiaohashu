@@ -43,42 +43,17 @@
 
 ## 项目架构
 
-```mermaid
-graph TD
-  A[Vue 3 前端] --> B[Gateway 网关]
-  B --> C[Auth 登录服务]
-  B --> D[User 用户服务]
-  B --> E[Note 笔记服务]
-  B --> F[OSS 文件服务]
-  B --> G[KV 文本服务]
-  B --> H[ID Generator]
-  A --> I[Agent 创作助手]
-  I --> J[上下文/记忆]
-  I --> K[标题生成]
-  I --> L[正文润色]
-  I --> M[标签推荐]
-  C --> N[(Redis)]
-  D --> O[(MySQL)]
-  E --> O
-  F --> P[(对象存储)]
-  G --> N
-```
+![](docs/architecture.svg)
 
 ---
 
 ## 项目演示
 
-> 后续建议补充真实截图或 GIF 动图，这里是最容易涨 Star 的地方。
+> 如果你暂时没有真实截图，可以先保留占位位，后续再补。
 
 | 首页 | 登录 | 发布笔记 | AI 助手 |
 |---|---|---|---|
 | 待补充截图 | 待补充截图 | 待补充截图 | 待补充截图 |
-
-建议后续补的图片：
-- `docs/screenshots/home.png`
-- `docs/screenshots/login.png`
-- `docs/screenshots/publish.png`
-- `docs/screenshots/agent.png`
 
 ---
 

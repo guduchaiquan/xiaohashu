@@ -1,34 +1,45 @@
 <template>
-  <div class="shell">
-    <aside class="mobile-nav">
+  <div class="app-shell">
+    <aside class="sidebar">
       <div class="brand">
         <div class="logo">小</div>
         <div>
           <h1>小哈书</h1>
-          <p>仿小红书移动端体验</p>
+          <p>发现灵感 · 记录生活 · AI 创作</p>
         </div>
       </div>
-      <div class="nav-list">
+
+      <nav class="nav-list">
         <button v-for="item in tabs" :key="item.key" :class="['nav-item', { active: activeTab === item.key }]" @click="activeTab = item.key">
           {{ item.label }}
         </button>
+      </nav>
+
+      <div class="quick-card">
+        <span class="quick-tag">Star-Friendly Demo</span>
+        <h3>一键体验</h3>
+        <p>登录、注册、发笔记、AI 创作助手都可以直接演示。</p>
       </div>
     </aside>
 
     <main class="main">
-      <header class="topbar">
+      <header class="hero">
         <div>
-          <span class="tag">Xiaohongshu Style</span>
-          <h2>发现灵感、记录生活、发布笔记</h2>
+          <span class="hero-badge">Xiaohongshu Style</span>
+          <h2>内容社区 + AI 创作助手</h2>
+          <p>一个适合面试展示、学习微服务和 AI Agent 的内容平台样例。</p>
         </div>
-        <button class="ghost-btn" @click="refreshProfile">刷新用户态</button>
+        <div class="hero-actions">
+          <button class="ghost-btn" @click="activeTab = 'agent'">试用 AI 助手</button>
+          <button class="ghost-btn" @click="activeTab = 'publish'">发布笔记</button>
+        </div>
       </header>
 
-      <section v-if="activeTab === 'feed'" class="feed">
-        <article v-for="card in cards" :key="card.title" class="card note">
-          <div class="cover" :style="{ background: card.bg }"></div>
-          <div class="card-body">
-            <div class="card-meta">
+      <section v-if="activeTab === 'feed'" class="feed-grid">
+        <article v-for="card in cards" :key="card.title" class="feed-card">
+          <div class="feed-cover" :style="{ background: card.bg }"></div>
+          <div class="feed-body">
+            <div class="feed-meta">
               <span>{{ card.author }}</span>
               <span>{{ card.likes }} 喜欢</span>
             </div>
@@ -38,150 +49,111 @@
         </article>
       </section>
 
-      <section v-else-if="activeTab === 'login'" class="card auth-panel">
-        <div class="panel-head">
-          <h3>登录 / 注册</h3>
-          <p>支持验证码登录和密码登录，注册将自动走后端接口。</p>
-        </div>
+      <section v-else-if="activeTab === 'login'" class="panel">
+        <h3>登录 / 注册</h3>
+        <p>支持验证码登录和密码登录，注册将自动走后端接口。</p>
         <form class="form" @submit.prevent="handleLogin">
-          <label>
-            手机号
-            <input v-model="loginForm.phone" placeholder="请输入手机号" />
-          </label>
-          <label>
-            登录类型
-            <select v-model.number="loginForm.type">
-              <option :value="1">验证码登录</option>
-              <option :value="2">密码登录</option>
-            </select>
-          </label>
-          <label v-if="loginForm.type === 1">
-            验证码
-            <input v-model="loginForm.code" placeholder="短信验证码" />
-          </label>
-          <label v-else>
-            密码
-            <input v-model="loginForm.password" type="password" placeholder="密码" />
-          </label>
-          <button type="submit">登录</button>
+          <input v-model="loginForm.phone" placeholder="手机号" />
+          <select v-model.number="loginForm.type">
+            <option :value="1">验证码登录</option>
+            <option :value="2">密码登录</option>
+          </select>
+          <input v-if="loginForm.type === 1" v-model="loginForm.code" placeholder="验证码" />
+          <input v-else v-model="loginForm.password" type="password" placeholder="密码" />
+          <button type="submit" class="primary-btn">登录</button>
         </form>
       </section>
 
-      <section v-else-if="activeTab === 'register'" class="card auth-panel">
-        <div class="panel-head">
-          <h3>注册账号</h3>
-          <p>先完成手机号注册，后续你可以再补短信验证码。</p>
-        </div>
+      <section v-else-if="activeTab === 'register'" class="panel">
+        <h3>注册账号</h3>
+        <p>手机号注册后可直接登录，适合演示完整闭环。</p>
         <form class="form" @submit.prevent="handleRegister">
-          <label>
-            昵称
-            <input v-model="registerForm.nickname" placeholder="请输入昵称" />
-          </label>
-          <label>
-            手机号
-            <input v-model="registerForm.phone" placeholder="请输入手机号" />
-          </label>
-          <label>
-            密码
-            <input v-model="registerForm.password" type="password" placeholder="请输入密码" />
-          </label>
-          <button type="submit">注册</button>
+          <input v-model="registerForm.nickname" placeholder="昵称" />
+          <input v-model="registerForm.phone" placeholder="手机号" />
+          <input v-model="registerForm.password" type="password" placeholder="密码" />
+          <button type="submit" class="primary-btn">注册</button>
         </form>
       </section>
 
-      <section v-else-if="activeTab === 'publish'" class="card auth-panel">
-        <div class="panel-head">
-          <h3>发布笔记</h3>
-          <p>可测试图文笔记的发布流程。</p>
-        </div>
+      <section v-else-if="activeTab === 'publish'" class="panel">
+        <h3>发布笔记</h3>
+        <p>图文 / 视频笔记入口，支持把 AI 生成结果直接带回。</p>
         <form class="form" @submit.prevent="handlePublish">
-          <label>
-            标题
-            <input v-model="publishForm.title" placeholder="标题" />
-          </label>
-          <label>
-            正文
-            <textarea v-model="publishForm.content" rows="6" placeholder="写点什么吧"></textarea>
-          </label>
+          <input v-model="publishForm.title" placeholder="标题" />
+          <textarea v-model="publishForm.content" rows="6" placeholder="写点什么吧"></textarea>
           <div class="action-row">
             <button type="button" class="ghost-btn" @click="aiGenerateTitles">AI 标题</button>
             <button type="button" class="ghost-btn" @click="aiRewrite">AI 润色</button>
             <button type="button" class="ghost-btn" @click="aiTags">AI 标签</button>
           </div>
-          <div v-if="aiResult.titles.length" class="ai-box">
+          <div v-if="aiResult.titles.length" class="result-box">
             <h4>标题建议</h4>
             <div class="chips">
               <span v-for="title in aiResult.titles" :key="title" class="chip" @click="publishForm.title = title">{{ title }}</span>
             </div>
           </div>
-          <div v-if="aiResult.rewrite" class="ai-box">
+          <div v-if="aiResult.rewrite" class="result-box">
             <h4>润色结果</h4>
             <p>{{ aiResult.rewrite }}</p>
           </div>
-          <div v-if="aiResult.tags.length" class="ai-box">
+          <div v-if="aiResult.tags.length" class="result-box">
             <h4>推荐标签</h4>
             <div class="chips">
               <span v-for="tag in aiResult.tags" :key="tag" class="chip">#{{ tag }}</span>
             </div>
           </div>
-          <button type="submit">发布</button>
+          <button type="submit" class="primary-btn">发布</button>
         </form>
       </section>
 
-      <section v-else-if="activeTab === 'agent'" class="card auth-panel">
+      <section v-else-if="activeTab === 'agent'" class="panel">
         <div class="panel-head">
-          <h3>AI 创作助手</h3>
-          <p>支持上下文、记忆和一键 Agent 流程。</p>
+          <div>
+            <h3>AI 创作助手</h3>
+            <p>支持上下文、记忆和工作流式一键生成。</p>
+          </div>
+          <div class="stage-pill">{{ agentOutput.stage || 'WAITING' }}</div>
+        </div>
+        <div class="workflow-bar">
+          <span v-for="step in workflowSteps" :key="step.key" :class="['workflow-step', { active: agentOutput.stage === step.key }]">{{ step.label }}</span>
         </div>
         <form class="form" @submit.prevent="runAgentAll">
-          <label>
-            会话 ID
-            <input v-model="agentSessionId" placeholder="不填则自动生成" />
-          </label>
-          <label>
-            用户偏好
-            <input v-model="agentPreferences" placeholder="例如：种草风, 干货风" />
-          </label>
-          <label>
-            输入内容
-            <textarea v-model="agentInput" rows="6" placeholder="输入一段你想润色的笔记正文"></textarea>
-          </label>
-          <button type="submit">一键生成</button>
+          <input v-model="agentSessionId" placeholder="会话 ID，不填则自动生成" />
+          <input v-model="agentPreferences" placeholder="用户偏好，例如：种草风, 干货风" />
+          <textarea v-model="agentInput" rows="6" placeholder="输入一段你想润色的笔记正文"></textarea>
+          <button type="submit" class="primary-btn">一键生成</button>
         </form>
-        <div v-if="agentOutput.titles.length" class="ai-box">
-          <h4>生成标题</h4>
-          <div class="chips">
-            <span v-for="title in agentOutput.titles" :key="title" class="chip" @click="publishForm.title = title">{{ title }}</span>
-          </div>
-        </div>
-        <div v-if="agentOutput.rewrite" class="ai-box">
-          <h4>润色结果</h4>
-          <p>{{ agentOutput.rewrite }}</p>
-        </div>
-        <div v-if="agentOutput.tags.length" class="ai-box">
-          <h4>推荐标签</h4>
-          <div class="chips">
-            <span v-for="tag in agentOutput.tags" :key="tag" class="chip">#{{ tag }}</span>
-          </div>
-        </div>
-        <div v-if="agentOutput.contextHints.length" class="ai-box">
+        <div v-if="agentOutput.contextHints.length" class="result-box">
           <h4>上下文提示</h4>
           <ul>
             <li v-for="hint in agentOutput.contextHints" :key="hint">{{ hint }}</li>
           </ul>
         </div>
-        <div v-if="agentOutput.memorySummary" class="ai-box">
+        <div v-if="agentOutput.titles.length" class="result-box">
+          <h4>生成标题</h4>
+          <div class="chips">
+            <span v-for="title in agentOutput.titles" :key="title" class="chip" @click="publishForm.title = title">{{ title }}</span>
+          </div>
+        </div>
+        <div v-if="agentOutput.rewrite" class="result-box">
+          <h4>润色结果</h4>
+          <p>{{ agentOutput.rewrite }}</p>
+        </div>
+        <div v-if="agentOutput.tags.length" class="result-box">
+          <h4>推荐标签</h4>
+          <div class="chips">
+            <span v-for="tag in agentOutput.tags" :key="tag" class="chip">#{{ tag }}</span>
+          </div>
+        </div>
+        <div v-if="agentOutput.memorySummary" class="result-box">
           <h4>记忆摘要</h4>
           <p>{{ agentOutput.memorySummary }}</p>
         </div>
       </section>
 
-      <section v-else class="card auth-panel">
-        <div class="panel-head">
-          <h3>个人主页</h3>
-          <p>展示用户状态、登录信息和测试结果。</p>
-        </div>
-        <div class="profile-box">
+      <section v-else class="panel profile-panel">
+        <h3>个人主页</h3>
+        <div class="profile-card">
           <div class="avatar">Q</div>
           <div>
             <strong>{{ profile.nickname || '未登录用户' }}</strong>
@@ -227,7 +199,13 @@ const aiResult = ref({ titles: [], rewrite: '', tags: [] })
 const agentInput = ref('')
 const agentSessionId = ref('')
 const agentPreferences = ref('')
-const agentOutput = ref({ titles: [], rewrite: '', tags: [], contextHints: [], memorySummary: '' })
+const agentOutput = ref({ stage: '', titles: [], rewrite: '', tags: [], contextHints: [], memorySummary: '' })
+const workflowSteps = [
+  { key: 'INTAKE_BLOCKED', label: '输入校验' },
+  { key: 'GROUNDING_ONLY', label: '上下文理解' },
+  { key: 'CONTEXTED_REWRITE', label: '上下文生成' },
+  { key: 'MEMORY_WRITE', label: '记忆沉淀' },
+]
 
 const api = axios.create({ baseURL: '/api', timeout: 10000 })
 const agentApi = axios.create({ baseURL: 'http://localhost:8090', timeout: 10000 })
@@ -239,8 +217,7 @@ const flash = (text) => {
 
 const handleLogin = async () => {
   try {
-    const payload = { ...loginForm.value }
-    const { data } = await api.post('/user/login', payload)
+    const { data } = await api.post('/user/login', { ...loginForm.value })
     if (data?.success) {
       token.value = data.data
       localStorage.setItem('xhs_token', data.data)
@@ -311,15 +288,15 @@ const aiTags = async () => {
 
 const runAgentAll = async () => {
   try {
-    const content = agentInput.value
     const { data } = await agentApi.post('/agent/run', {
-      content,
+      content: agentInput.value,
       sessionId: agentSessionId.value,
       preferences: agentPreferences.value,
     })
     const result = data?.data || {}
     agentSessionId.value = result.sessionId || agentSessionId.value
     agentOutput.value = {
+      stage: result.stage || '',
       titles: result.titles || [],
       rewrite: result.rewrite || '',
       tags: result.tags || [],

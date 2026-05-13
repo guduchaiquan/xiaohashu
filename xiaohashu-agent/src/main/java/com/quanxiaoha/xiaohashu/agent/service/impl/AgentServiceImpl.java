@@ -73,9 +73,23 @@ public class AgentServiceImpl implements AgentService {
         List<String> titles = generateTitles(content);
         String rewrite = rewriteContent(content);
         List<String> tags = recommendTags(content);
+        String stage = buildStageLabel(content, preferences, hints);
         agentMemoryService.remember(realSessionId, content, titles, rewrite, tags, hints);
-        return new AgentResult(realSessionId, titles, rewrite, tags, hints, agentMemoryService.summarize(realSessionId));
+        return new AgentResult(realSessionId, stage, titles, rewrite, tags, hints, agentMemoryService.summarize(realSessionId));
     }
 
-    public record AgentResult(String sessionId, List<String> titles, String rewrite, List<String> tags, List<String> contextHints, String memorySummary) {}
+    private String buildStageLabel(String content, String preferences, List<String> hints) {
+        if (content == null || content.isBlank()) {
+            return "INTAKE_BLOCKED";
+        }
+        if (preferences != null && !preferences.isBlank()) {
+            return "MEMORY_WRITE";
+        }
+        if (!hints.isEmpty()) {
+            return "CONTEXTED_REWRITE";
+        }
+        return "GROUNDING_ONLY";
+    }
+
+    public record AgentResult(String sessionId, String stage, List<String> titles, String rewrite, List<String> tags, List<String> contextHints, String memorySummary) {}
 }
