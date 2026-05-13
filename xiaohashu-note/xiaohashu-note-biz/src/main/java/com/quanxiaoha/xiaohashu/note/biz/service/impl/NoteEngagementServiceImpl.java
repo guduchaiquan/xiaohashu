@@ -2,8 +2,6 @@ package com.quanxiaoha.xiaohashu.note.biz.service.impl;
 
 import com.quanxiaoha.framework.common.context.LoginUserContextHolder;
 import com.quanxiaoha.framework.common.response.Response;
-import com.quanxiaoha.xiaohashu.note.biz.domain.dataobject.NoteDO;
-import com.quanxiaoha.xiaohashu.note.biz.domain.mapper.NoteDOMapper;
 import com.quanxiaoha.xiaohashu.note.biz.model.vo.CommentCreateReqVO;
 import com.quanxiaoha.xiaohashu.note.biz.model.vo.CommentVO;
 import com.quanxiaoha.xiaohashu.note.biz.model.vo.NoteInteractReqVO;
@@ -19,9 +17,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class NoteEngagementServiceImpl implements NoteEngagementService {
-
-    @Resource
-    private NoteDOMapper noteDOMapper;
 
     private final Map<Long, AtomicLong> likeCounter = new ConcurrentHashMap<>();
     private final Map<Long, AtomicLong> favoriteCounter = new ConcurrentHashMap<>();
