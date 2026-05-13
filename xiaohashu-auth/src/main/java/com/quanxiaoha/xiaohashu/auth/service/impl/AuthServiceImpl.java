@@ -47,6 +47,10 @@ public class AuthServiceImpl implements AuthService {
 
         LoginTypeEnum loginTypeEnum = LoginTypeEnum.valueOf(type);
 
+        if (Objects.isNull(loginTypeEnum)) {
+            throw new BizException(ResponseCodeEnum.LOGIN_TYPE_ERROR);
+        }
+
         // 判断登录类型
         switch (loginTypeEnum) {
             case VERIFICATION_CODE: // 验证码登录
@@ -59,6 +63,10 @@ public class AuthServiceImpl implements AuthService {
                 String key = RedisKeyConstants.buildVerificationCodeKey(phone);
                 // 查询存储在 Redis 中该用户的登录验证码
                 String sentCode = (String) redisTemplate.opsForValue().get(key);
+
+                if (StringUtils.isBlank(sentCode)) {
+                    throw new BizException(ResponseCodeEnum.VERIFICATION_CODE_ERROR);
+                }
 
                 // 判断用户提交的验证码，与 Redis 中的验证码是否一致
                 if (!StringUtils.equals(verificationCode, sentCode)) {
@@ -90,20 +98,23 @@ public class AuthServiceImpl implements AuthService {
                     throw new BizException(ResponseCodeEnum.USER_NOT_FOUND);
                 }
 
+                // 密码必须填写
+                Preconditions.checkArgument(StringUtils.isNotBlank(password), "密码不能为空");
+
                 // 拿到密文密码
                 String encodePassword = userByPhone.getPassword();
-                
-                log.info("==> 密码验证 - 输入密码: {}, 数据库密码: {}", password, encodePassword);
+
+                log.info("==> 密码验证 - 用户手机号: {}", phone);
 
                 // 匹配密码是否一致
                 boolean isPasswordCorrect = false;
-                
+
                 // 检查数据库密码是否为 BCrypt 格式
-                if (encodePassword.startsWith("$2a$") || encodePassword.startsWith("$2b$") || encodePassword.startsWith("$2y$")) {
+                if (encodePassword != null && (encodePassword.startsWith("$2a$") || encodePassword.startsWith("$2b$") || encodePassword.startsWith("$2y$"))) {
                     // BCrypt 格式，使用 BCrypt 验证
                     isPasswordCorrect = passwordEncoder.matches(password, encodePassword);
                 } else {
-                    // 非 BCrypt 格式，使用明文比较（临时解决方案）
+                    // 非 BCrypt 格式，使用明文比较（兼容旧数据）
                     log.info("==> 数据库密码非 BCrypt 格式，使用明文比较");
                     isPasswordCorrect = password.equals(encodePassword);
                 }
