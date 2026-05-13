@@ -1,8 +1,64 @@
 # 小哈书
 
-小哈书是一个基于 Spring Cloud Alibaba 的仿小红书风格微服务项目，包含认证、用户、笔记、对象存储、KV 存储、分布式 ID 生成、网关和 AI 创作助手等模块。
+> 一个适合面试展示、学习 Spring Cloud Alibaba 和 AI Agent 的仿小红书微服务项目。
 
-## 当前模块
+小哈书不是工业级大项目，而是一个**能跑、能演示、能写进简历、能继续扩展 AI 能力**的内容社区实战项目。
+
+---
+
+## 一句话亮点
+
+- 仿小红书内容社区
+- Spring Cloud Alibaba 微服务拆分
+- Sa-Token 鉴权登录
+- Redis 验证码与会话
+- OSS 文件上传
+- 分布式 ID 生成
+- Vue 3 小红书风格前端
+- AI 创作助手：标题生成 / 正文润色 / 标签推荐 / 上下文记忆
+
+---
+
+## 适合谁
+
+- 想找 Java 后端工作的人
+- 想练 Spring Cloud Alibaba 微服务的人
+- 想做一个简历能写的项目的人
+- 想把 Agent / AI 开发方向加到项目里的人
+
+---
+
+## 技术栈
+
+### 后端
+- Spring Boot 3
+- Spring Cloud Alibaba
+- Nacos
+- OpenFeign
+- Sa-Token
+- MyBatis
+- Redis
+- MySQL
+- OSS / MinIO
+- Maven 多模块
+
+### 前端
+- Vue 3
+- Vite
+- Axios
+- 仿小红书移动端风格
+
+### AI / Agent
+- 独立 `xiaohashu-agent` 服务
+- 会话上下文 `sessionId`
+- 轻量记忆体
+- 上下文提示
+- 幻觉抑制思路
+- 可平滑升级为 LangGraph / RAG / LLM Tool Calling
+
+---
+
+## 项目模块
 
 - `xiaohashu-auth`：认证、登录、验证码
 - `xiaohashu-user`：用户资料、权限、角色
@@ -13,95 +69,113 @@
 - `xiaohashu-gateway`：统一网关与鉴权
 - `xiaoha-framework`：公共基础组件
 - `xiaohashu-web`：Vue 3 前端测试页面
-- `xiaohashu-agent`：AI 创作助手服务（标题生成/正文润色/标签推荐/上下文记忆）
+- `xiaohashu-agent`：AI 创作助手服务
 
-## Agent 设计说明
+---
 
-当前 `xiaohashu-agent` 采用“工业化可演示”思路，重点是：
+## 核心功能
 
-- 上下文机制：通过 `sessionId` 隔离会话
-- 记忆机制：保存最近一次创作结果和上下文提示
-- 幻觉抑制：先做内容提示、偏好提示、标签提示，再输出结果
-- 可扩展：后续可以直接替换成 LangGraph / LLM / RAG 实现
+### 用户侧
+- 手机号注册
+- 验证码登录
+- 密码登录
+- 修改密码
+- 修改个人资料
 
-## 后端接口测试顺序
+### 内容侧
+- 发布图文笔记
+- 发布视频笔记
+- 笔记正文存储与恢复
+- 文件上传
 
-建议先启动 `Nacos`、`Redis`、`MySQL`，再启动业务服务。
+### AI 创作助手
+- 生成标题
+- 润色正文
+- 推荐标签
+- 根据 `sessionId` 保存记忆
+- 根据偏好和内容生成上下文提示
 
-### 1. 发送验证码
+---
 
-`POST /verification/code/send`
+## 在线预览目标
 
-```json
-{
-  "phone": "13800138000"
-}
+如果你后续部署到服务器，可以在这里放：
+- 前端预览地址
+- 后端接口地址
+- Agent 演示地址
+
+---
+
+## 快速启动
+
+### 1）前端
+
+```bash
+cd xiaohashu-web
+npm install
+npm run dev
 ```
 
-### 2. 注册用户
+### 2）Agent 服务
 
-`POST /user/register`
-
-```json
-{
-  "phone": "13800138000"
-}
+```bash
+mvn -pl xiaohashu-agent spring-boot:run
 ```
 
-### 3. 查询手机号是否存在
+### 3）后端主项目
 
-`POST /user/findByPhone`
+先确保以下服务可用：
+- Nacos
+- Redis
+- MySQL
+- 网关
+- auth / user / note / oss / kv / id-generator
 
-```json
-{
-  "phone": "13800138000"
-}
+---
+
+## 推荐测试流程
+
+### 后端 API
+1. 发送验证码
+2. 注册用户
+3. 查询手机号
+4. 验证码登录
+5. 密码登录
+6. 发布笔记
+7. Agent 一键生成
+
+### 前端页面
+1. 首页信息流
+2. 登录页
+3. 注册页
+4. 发布页
+5. AI 助手页
+6. 个人主页
+
+---
+
+## Postman 说明
+
+### 通用环境变量
+- `base_url`
+- `token`
+
+### 常见请求头
+
+```http
+Authorization: Bearer {{token}}
 ```
 
-### 4. 验证码登录
+---
 
-`POST /user/login`
+## Agent 接口
 
-```json
-{
-  "phone": "13800138000",
-  "type": 1,
-  "code": "123456"
-}
-```
+- `POST /agent/title`
+- `POST /agent/rewrite`
+- `POST /agent/tags`
+- `POST /agent/run`
 
-### 5. 密码登录
-
-`POST /user/login`
-
-```json
-{
-  "phone": "13800138000",
-  "type": 2,
-  "password": "123456"
-}
-```
-
-### 6. 发布笔记
-
-`POST /note/publish`
-
-```json
-{
-  "type": 1,
-  "title": "我的第一篇笔记",
-  "content": "这是笔记正文",
-  "imgUris": [
-    "https://xx.com/a.jpg",
-    "https://xx.com/b.jpg"
-  ],
-  "topicId": 1
-}
-```
-
-### 7. Agent 一键生成
-
-`POST http://localhost:8090/agent/run`
+### 一键生成示例
 
 ```json
 {
@@ -111,63 +185,40 @@
 }
 ```
 
-返回内容包含：
-- `titles`
-- `rewrite`
-- `tags`
-- `contextHints`
-- `memorySummary`
+---
 
-## Postman 测试建议
+## Agent 设计思路
 
-### 通用配置
+当前 Agent 采用“轻量工业化”思路：
 
-- `base_url`：例如 `http://localhost:8000`
-- 登录成功后把返回的 token 保存到环境变量 `token`
+1. 先分析上下文
+2. 再生成标题 / 润色 / 标签
+3. 再写入记忆
+4. 再输出记忆摘要
 
-### 请求头
+这样做的好处是：
+- 能演示 AI 工程思路
+- 便于以后升级成 LangGraph
+- 便于以后接真实大模型和 RAG
 
-如果你走的是网关或者需要登录态的接口，常见需要加：
+---
 
-```http
-Authorization: Bearer {{token}}
-```
+## 简历可写亮点
 
-具体以你当前项目网关/拦截器实现为准。
+- 基于 Spring Cloud Alibaba 拆分内容社区微服务
+- 使用 Redis 实现验证码与会话增强
+- 使用 OSS 完成图片/文件上传链路
+- 使用分布式 ID 生成器支持主键统一生成
+- 设计 AI 创作助手模块，支持上下文、记忆和标签推荐
+- 实现 Vue 3 仿小红书前端演示页
 
-### 推荐测试流程
+---
 
-1. 调用验证码发送接口
-2. 调用注册接口
-3. 调用手机号查询接口
-4. 调用验证码登录接口
-5. 调用密码登录接口
-6. 调用发布笔记接口
-7. 调用 Agent 一键生成接口
+## 项目定位
 
-## 前端运行
-
-```bash
-cd xiaohashu-web
-npm install
-npm run dev
-```
-
-默认访问 Vite 开发服务器，页面风格偏小红书，可用于登录、注册、笔记发布和 AI 创作测试。
-
-## Agent 服务运行
-
-```bash
-mvn -pl xiaohashu-agent spring-boot:run
-```
-
-Agent 服务默认端口为 `8090`，提供如下接口：
-
-- `POST /agent/title`：生成标题
-- `POST /agent/rewrite`：正文润色
-- `POST /agent/tags`：标签推荐
-- `POST /agent/run`：一键生成（标题 + 润色 + 标签 + 上下文 + 记忆）
-
-## 后端说明
-
-后端采用多模块 Maven 工程，当前已完成基础业务骨架和核心业务接口，后续可继续补齐完整联调、接口测试和页面接入。
+这个项目的目标不是工业级，而是：
+- 能跑
+- 能展示
+- 能讲清楚架构
+- 能体现后端、前端、AI 三个方向的能力
+- 能成为你简历里的一个亮点项目
