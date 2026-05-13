@@ -57,10 +57,15 @@ public class NoteServiceImpl implements NoteService {
         // 笔记类型
         Integer type = publishNoteReqVO.getType();
 
+        // 参数校验，避免空指针
+        if (Objects.isNull(type)) {
+            throw new BizException(ResponseCodeEnum.PARAM_NOT_VALID);
+        }
+
         // 获取对应类型的枚举
         NoteTypeEnum noteTypeEnum = NoteTypeEnum.valueOf(type);
 
-        // 若非图文、视频，抛出业务业务异常
+        // 若非图文、视频，抛出业务异常
         if (Objects.isNull(noteTypeEnum)) {
             throw new BizException(ResponseCodeEnum.NOTE_TYPE_ERROR);
         }
@@ -69,6 +74,7 @@ public class NoteServiceImpl implements NoteService {
         // 笔记内容是否为空，默认值为 true，即空
         Boolean isContentEmpty = true;
         String videoUri = null;
+        boolean hasTextContent = StringUtils.isNotBlank(publishNoteReqVO.getContent());
         switch (noteTypeEnum) {
             case IMAGE_TEXT: // 图文笔记
                 List<String> imgUriList = publishNoteReqVO.getImgUris();
@@ -97,8 +103,13 @@ public class NoteServiceImpl implements NoteService {
         // 笔记内容
         String content = publishNoteReqVO.getContent();
 
+        // 笔记正文、标题、图片、视频都为空时，视为非法请求
+        if (!hasTextContent && StringUtils.isBlank(publishNoteReqVO.getTitle()) && Objects.isNull(videoUri) && Objects.isNull(publishNoteReqVO.getImgUris())) {
+            throw new BizException(ResponseCodeEnum.PARAM_NOT_VALID);
+        }
+
         // 若用户填写了笔记内容
-        if (StringUtils.isNotBlank(content)) {
+        if (hasTextContent) {
             // 内容是否为空，置为 false，即不为空
             isContentEmpty = false;
             // 生成笔记内容 UUID
@@ -152,6 +163,8 @@ public class NoteServiceImpl implements NoteService {
             if (StringUtils.isNotBlank(contentUuid)) {
                 keyValueRpcService.deleteNoteContent(contentUuid);
             }
+
+            throw new BizException(ResponseCodeEnum.NOTE_PUBLISH_FAIL);
         }
 
         return Response.success();
