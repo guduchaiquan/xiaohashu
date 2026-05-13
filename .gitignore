@@ -1,14 +1,8 @@
 target/
+node_modules/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-
-### Logs ###
-logs/
-**/logs/
-
-### Maven flatten plugin ###
-.flattened-pom.xml
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
@@ -43,3 +37,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Web ###
+xiaohashu-web/node_modules/
+xiaohashu-web/dist/
