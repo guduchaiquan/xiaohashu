@@ -1,0 +1,45 @@
+package com.quanxiaoha.xiaohashu.oss.biz.strategy.impl;
+
+import com.aliyun.oss.OSS;
+import com.quanxiaoha.xiaohashu.oss.biz.config.AliyunOSSConfig;
+import com.quanxiaoha.xiaohashu.oss.biz.config.AliyunOSSProperties;
+import com.quanxiaoha.xiaohashu.oss.biz.strategy.FileStrategy;
+import jakarta.annotation.Resource;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.ByteArrayInputStream;
+import java.util.UUID;
+
+/**
+ * @author: 犬小哈
+ * @date: 2024/6/27 19:47
+ * @version: v1.0.0
+ * @description: TODO
+ **/
+@Slf4j
+public class AliyunOSSFileStrategy implements FileStrategy  {
+@Resource
+private AliyunOSSProperties aliyunOSSProperties;
+@Resource
+private OSS ossClient;
+@SneakyThrows
+    @Override
+    public String uploadFile(MultipartFile file, String bucketName) {
+        log.info("## 上传文件至阿里云 OSS ...");
+        if (file == null||file.getSize() == 0){
+            log.error("==> 上传文件异常：文件大小为空 ...");
+            throw new RuntimeException("文件大小不能为空");
+        }
+        String originalFIleName = file.getOriginalFilename();
+        String key = UUID.randomUUID().toString().replaceAll("-","");
+        String suffix = originalFIleName.substring(originalFIleName.lastIndexOf("."));
+        String objectName = String.format("%s%s", key,suffix);
+        log.info("==> 开始上传文件至阿里云OSS，ObjectName：{}",objectName);
+        ossClient.putObject(bucketName,objectName,new ByteArrayInputStream(file.getInputStream().readAllBytes()));
+    String url = String.format("https://%s.%s/%s", bucketName, aliyunOSSProperties.getEndpoint(), objectName);
+    log.info("==> 上传文件至阿里云 OSS 成功，访问路径: {}", url);
+    return url;
+}
+}

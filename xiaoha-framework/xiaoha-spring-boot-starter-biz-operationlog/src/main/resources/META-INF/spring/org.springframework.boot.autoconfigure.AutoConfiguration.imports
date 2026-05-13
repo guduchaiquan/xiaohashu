@@ -1,0 +1,2 @@
+com.quanxiaoha.framework.biz.operationlog.config.ApiOperationLogAutoConfiguration
+com.quanxiaoha.framework.biz.operationlog.config.FeignContextAutoConfiguration
