@@ -29,13 +29,40 @@
 
 ---
 
-## 在线预览目标
+## 为什么值得收藏
 
-如果你后续部署到服务器，可以在这里放：
+这个仓库适合收藏，不是因为它“最复杂”，而是因为它**最适合学习和面试演示**：
 
-- 前端预览地址
-- 后端接口地址
-- Agent 演示地址
+- 业务场景明确，容易讲
+- 模块拆分清晰，容易学
+- 前后端完整，容易跑
+- Agent 能力接入，容易做亮点
+- README 已尽量做成“打开就知道能干什么”的首页
+
+---
+
+## 项目架构
+
+```mermaid
+graph TD
+  A[Vue 3 前端] --> B[Gateway 网关]
+  B --> C[Auth 登录服务]
+  B --> D[User 用户服务]
+  B --> E[Note 笔记服务]
+  B --> F[OSS 文件服务]
+  B --> G[KV 文本服务]
+  B --> H[ID Generator]
+  A --> I[Agent 创作助手]
+  I --> J[上下文/记忆]
+  I --> K[标题生成]
+  I --> L[正文润色]
+  I --> M[标签推荐]
+  C --> N[(Redis)]
+  D --> O[(MySQL)]
+  E --> O
+  F --> P[(对象存储)]
+  G --> N
+```
 
 ---
 
@@ -46,6 +73,12 @@
 | 首页 | 登录 | 发布笔记 | AI 助手 |
 |---|---|---|---|
 | 待补充截图 | 待补充截图 | 待补充截图 | 待补充截图 |
+
+建议后续补的图片：
+- `docs/screenshots/home.png`
+- `docs/screenshots/login.png`
+- `docs/screenshots/publish.png`
+- `docs/screenshots/agent.png`
 
 ---
 
